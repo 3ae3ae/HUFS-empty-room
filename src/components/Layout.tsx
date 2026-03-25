@@ -69,6 +69,12 @@ export default function Layout() {
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6">
         <Outlet />
       </main>
+
+      <footer className="max-w-7xl w-full mx-auto px-4 pb-6 sm:px-6">
+        <p className="text-xs text-slate-400 text-center">
+          이 사이트는 과목 개설 시간표를 기준으로 제작되었으므로, 실제 강의실 사용 여부는 반드시 직접 확인해 주세요.
+        </p>
+      </footer>
     </div>
   );
 }
