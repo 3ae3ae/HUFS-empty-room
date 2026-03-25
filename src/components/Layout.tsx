@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, User, Sparkles } from 'lucide-react';
+import { Menu, X, Home, Calendar, User, Sparkles, MessageSquareHeart } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function Layout() {
@@ -10,7 +10,7 @@ export default function Layout() {
   const navItems = [
     { path: '/', label: '빈 강의실 찾기', icon: Home },
     { path: '/timetable', label: '강의실 주간 시간표', icon: Calendar },
-    { path: '/professor', label: '교수님 찾기 ❤️', icon: User },
+    { path: '/professor', label: '교수님 찾기', icon: MessageSquareHeart },
   ];
 
   return (

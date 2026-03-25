@@ -32,7 +32,7 @@ export default function ProfessorSearch() {
     currentItem: { subject: (typeof results)[number]['subjects'][number]; timeplace: (typeof results)[number]['subjects'][number]['parsedTimeplaces'][number] } | undefined
   ) => {
     if (!currentItem) {
-      return `${prof} 교수님의 현재 수업 정보가 없어요.`;
+      return `${prof} 교수님의 현재 수업 정보가 없어요. 😭`;
     }
 
     const placeLabel = formatPlaceLabel(currentItem.timeplace.building, currentItem.timeplace.room);
@@ -43,7 +43,7 @@ export default function ProfessorSearch() {
   return (
     <div className="space-y-6 pb-8">
       <div className="space-y-2 px-2">
-        <h1 className="text-2xl font-extrabold text-slate-900">교수님 찾기 ❤️</h1>
+        <h1 className="text-2xl font-extrabold text-slate-900">교수님 찾기</h1>
         <p className="text-sm font-medium text-slate-500">우리 교수님, 지금은 뭐하고 계실까?</p>
       </div>
 
