@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByBuilding } from '../lib/data';
-import { Clock, MapPin, Sparkles } from 'lucide-react';
+import { ChevronDown, Clock, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import campusMap from '../assets/campus_map.jpg';
 import ImageLightbox from '../components/ImageLightbox';
@@ -24,6 +24,7 @@ export default function Home() {
 
   const [currentTime, setCurrentTime] = useState(initialNow);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [expandedBuildings, setExpandedBuildings] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (timeMode === 'now') {
@@ -80,6 +81,26 @@ export default function Home() {
     return result.sort((a, b) => a.building.localeCompare(b.building) || a.room.localeCompare(b.room));
   }, [endMin, hasInvalidRange, selectedBuildings, startMin, targetDay]);
 
+  const groupedEmptyRooms = useMemo(() => {
+    return emptyRooms.reduce<Record<string, typeof emptyRooms>>((acc, room) => {
+      if (!acc[room.building]) {
+        acc[room.building] = [];
+      }
+      acc[room.building].push(room);
+      return acc;
+    }, {});
+  }, [emptyRooms]);
+
+  useEffect(() => {
+    setExpandedBuildings(prev => {
+      const next = Object.keys(groupedEmptyRooms).reduce<Record<string, boolean>>((acc, building) => {
+        acc[building] = prev[building] ?? false;
+        return acc;
+      }, {});
+      return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+    });
+  }, [groupedEmptyRooms]);
+
   const formatTime = (mins: number) => {
     const h = Math.floor(mins / 60).toString().padStart(2, '0');
     const m = (mins % 60).toString().padStart(2, '0');
@@ -112,6 +133,13 @@ export default function Home() {
     if (hour < 12) return '좋은 아침입니다! ☀️';
     if (hour < 18) return '활기찬 오후 되세요! ☕';
     return '편안한 저녁 되세요! 🌙';
+  };
+
+  const toggleExpandedBuilding = (building: string) => {
+    setExpandedBuildings(prev => ({
+      ...prev,
+      [building]: !prev[building],
+    }));
   };
 
   return (
@@ -306,28 +334,78 @@ export default function Home() {
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-          {emptyRooms.map((room, idx) => (
-            <div 
-              key={idx} 
-              onClick={() => navigate(`/timetable/${room.place}`)}
-              className="group cursor-pointer rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md active:scale-[0.98]"
-            >
-              <div className="mb-1.5 flex items-start justify-between">
-                <div className="flex items-center text-lg font-extrabold leading-tight text-gray-900 transition-colors group-hover:text-blue-600">
-                  <MapPin size={18} className="mr-1 text-blue-500" />
-                  {formatPlaceLabel(room.building, room.room)}
-                </div>
-              </div>
-              <div className="flex items-center text-sm font-semibold text-emerald-700">
-                <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                {timeMode === 'custom' && customEndTime
-                  ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
-                  : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
-              </div>
-            </div>
-          ))}
-        </div>
+        {emptyRooms.length > 0 && (
+          <div className="space-y-4">
+            {Object.entries(groupedEmptyRooms).map(([building, rooms]) => {
+              const isExpanded = expandedBuildings[building] ?? false;
+              const visibleRooms = isExpanded ? rooms : rooms.slice(0, 3);
+              const hasMoreRooms = rooms.length > 3;
+
+              return (
+                <section
+                  key={building}
+                  className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3 px-4 py-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-extrabold text-gray-900">{getBuildingName(building)}</h3>
+                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                          {rooms.length}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-500">빈 강의실 {rooms.length}개</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    {visibleRooms.map(room => (
+                      <button
+                        key={room.place}
+                        type="button"
+                        onClick={() => navigate(`/timetable/${room.place}`)}
+                        className="group flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-4 text-left transition-colors hover:bg-blue-50/60"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center text-base font-bold text-gray-900 transition-colors group-hover:text-blue-600">
+                            <MapPin size={17} className="mr-1.5 shrink-0 text-blue-500" />
+                            <span className="truncate">{formatPlaceLabel(room.building, room.room)}</span>
+                          </div>
+                          <div className="mt-1 flex items-center text-sm font-semibold text-emerald-700">
+                            <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            {timeMode === 'custom' && customEndTime
+                              ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
+                              : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
+                          </div>
+                        </div>
+                        <ChevronDown
+                          size={18}
+                          className="-rotate-90 shrink-0 text-gray-300 transition-colors group-hover:text-blue-400"
+                        />
+                      </button>
+                    ))}
+
+                    {hasMoreRooms && (
+                      <div className="border-t border-gray-100 px-4 py-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandedBuilding(building)}
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
+                        >
+                          {isExpanded ? '접기' : `${rooms.length - 3}개 더보기`}
+                          <ChevronDown
+                            size={16}
+                            className={cn('transition-transform', isExpanded && 'rotate-180')}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
         
         {emptyRooms.length === 0 && (
           <div className="text-center py-16 bg-white rounded-3xl border border-gray-100 border-dashed">
