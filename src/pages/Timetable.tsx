@@ -152,8 +152,7 @@ export default function Timetable() {
                         </div>
                       )}
                       <div className={cn(
-                        'shrink-0 text-[11px] font-extrabold leading-tight sm:text-xs',
-                        height < 42 ? 'line-clamp-1' : 'line-clamp-2',
+                        'text-[11px] font-extrabold leading-tight break-words sm:text-xs',
                         isCurrent ? 'text-slate-950' : 'text-slate-800'
                       )}>
                         {item.subject.name}
