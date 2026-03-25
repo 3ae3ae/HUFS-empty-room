@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { formatPlaceLabel, scheduleByProfessor } from '../lib/data';
 import { Search, User, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide-react';
+import { cn } from '../lib/utils';
+import { isCurrentTimePlace, useCurrentTime } from '../lib/currentTime';
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const START_HOUR = 9;
@@ -9,6 +11,7 @@ const HOUR_HEIGHT = 64;
 
 export default function ProfessorSearch() {
   const [searchTerm, setSearchTerm] = useState('');
+  const now = useCurrentTime();
 
   const results = useMemo(() => {
     if (!searchTerm.trim()) return [];
@@ -98,6 +101,7 @@ export default function ProfessorSearch() {
                     {scheduleItems.map((item, idx) => {
                       const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
                       const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
+                      const isCurrent = isCurrentTimePlace(item.timeplace, now);
 
                       if (top < 0 || top + height > (END_HOUR - START_HOUR) * HOUR_HEIGHT) {
                         return null;
@@ -106,7 +110,12 @@ export default function ProfessorSearch() {
                       return (
                         <div
                           key={`${item.subject.lectureId}-${idx}`}
-                          className="absolute rounded-2xl px-3 py-2 overflow-hidden shadow-sm border border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50 hover:shadow-md transition-all"
+                          className={cn(
+                            'absolute rounded-2xl px-3 py-2 overflow-hidden border transition-all',
+                            isCurrent
+                              ? 'z-10 border-emerald-300 bg-gradient-to-br from-emerald-100 via-cyan-50 to-white shadow-md shadow-emerald-100/80 ring-2 ring-emerald-200/80'
+                              : 'border-slate-200 bg-slate-50/95 shadow-sm shadow-slate-200/60 hover:border-emerald-200 hover:bg-slate-50'
+                          )}
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
@@ -114,18 +123,35 @@ export default function ProfessorSearch() {
                             width: `calc(${100 / 8}% - 8px)`,
                           }}
                         >
-                          <div className="text-xs font-extrabold text-slate-900 leading-tight line-clamp-2">
+                          {isCurrent && (
+                            <div className="mb-1 inline-flex rounded-full bg-emerald-600/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                              진행 중
+                            </div>
+                          )}
+                          <div className={cn(
+                            'text-xs font-extrabold leading-tight line-clamp-2',
+                            isCurrent ? 'text-slate-950' : 'text-slate-800'
+                          )}>
                             {item.subject.name}
                           </div>
-                          <div className="mt-1 text-[11px] font-semibold text-emerald-700">
+                          <div className={cn(
+                            'mt-1 text-[11px]',
+                            isCurrent ? 'font-semibold text-emerald-700' : 'font-medium text-slate-600'
+                          )}>
                             {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
                           </div>
-                          <div className="mt-1 flex items-center text-[10px] font-medium text-slate-600">
-                            <MapPin size={11} className="mr-1 shrink-0 text-slate-400" />
+                          <div className={cn(
+                            'mt-1 flex items-center text-[10px]',
+                            isCurrent ? 'font-medium text-slate-700' : 'font-medium text-slate-500'
+                          )}>
+                            <MapPin size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
                             <span className="truncate">{formatPlaceLabel(item.timeplace.building, item.timeplace.room)}</span>
                           </div>
-                          <div className="mt-1 flex items-center text-[10px] font-medium text-slate-500">
-                            <BookOpen size={11} className="mr-1 shrink-0 text-slate-400" />
+                          <div className={cn(
+                            'mt-1 flex items-center text-[10px]',
+                            isCurrent ? 'font-medium text-slate-600' : 'font-medium text-slate-400'
+                          )}>
+                            <BookOpen size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
                             <span className="truncate">{item.subject.type}</span>
                           </div>
                         </div>

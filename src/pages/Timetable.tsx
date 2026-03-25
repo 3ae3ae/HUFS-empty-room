@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatPlaceLabel, scheduleByPlace } from '../lib/data';
 import { Search, ChevronLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { cn } from '../lib/utils';
+import { isCurrentTimePlace, useCurrentTime } from '../lib/currentTime';
 
 const DAYS = ['월', '화', '수', '목', '금'];
 const START_HOUR = 9;
@@ -11,6 +13,7 @@ export default function Timetable() {
   const { place } = useParams();
   const navigate = useNavigate();
   const [searchPlace, setSearchPlace] = useState(place || '');
+  const now = useCurrentTime();
 
   const schedule = useMemo(() => {
     if (!searchPlace) return [];
@@ -92,11 +95,17 @@ export default function Timetable() {
                   const top = (item.timeplace.startMin - START_HOUR * 60) * (65/60);
                   const height = (item.timeplace.endMin - item.timeplace.startMin) * (65/60);
                   if (top < 0 || top + height > (END_HOUR - START_HOUR) * 65) return null; // Out of bounds
+                  const isCurrent = isCurrentTimePlace(item.timeplace, now);
 
                   return (
                     <div
                       key={idx}
-                      className="absolute rounded-xl p-2 overflow-hidden shadow-sm border border-blue-200 bg-blue-50 hover:bg-blue-100 hover:shadow-md transition-all cursor-default group"
+                      className={cn(
+                        'absolute rounded-xl p-2 overflow-hidden border transition-all cursor-default group',
+                        isCurrent
+                          ? 'z-10 border-blue-300 bg-blue-100 shadow-md shadow-blue-200/70 ring-2 ring-blue-200/80'
+                          : 'border-slate-200 bg-slate-50/92 shadow-sm shadow-slate-200/60 hover:border-blue-200 hover:bg-slate-50'
+                      )}
                       style={{
                         top: `${top}px`,
                         height: `${height}px`,
@@ -104,9 +113,29 @@ export default function Timetable() {
                         width: `calc(${100 / 6}% - 8px)`,
                       }}
                     >
-                      <div className="text-xs font-extrabold text-blue-900 leading-tight line-clamp-2 group-hover:text-blue-700">{item.subject.name}</div>
-                      <div className="text-[11px] font-medium text-blue-600 mt-1 truncate">{item.subject.professor}</div>
-                      <div className="text-[10px] font-medium text-blue-400 mt-0.5">{formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}</div>
+                      {isCurrent && (
+                        <div className="mb-1 inline-flex rounded-full bg-blue-600/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                          진행 중
+                        </div>
+                      )}
+                      <div className={cn(
+                        'text-xs font-extrabold leading-tight line-clamp-2',
+                        isCurrent ? 'text-blue-950' : 'text-slate-800 group-hover:text-slate-900'
+                      )}>
+                        {item.subject.name}
+                      </div>
+                      <div className={cn(
+                        'text-[11px] mt-1 truncate',
+                        isCurrent ? 'font-semibold text-blue-700' : 'font-medium text-slate-600'
+                      )}>
+                        {item.subject.professor}
+                      </div>
+                      <div className={cn(
+                        'text-[10px] mt-0.5',
+                        isCurrent ? 'font-semibold text-blue-500' : 'font-medium text-slate-400'
+                      )}>
+                        {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
+                      </div>
                     </div>
                   );
                 })}
