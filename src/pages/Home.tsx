@@ -306,21 +306,21 @@ export default function Home() {
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {emptyRooms.map((room, idx) => (
             <div 
               key={idx} 
               onClick={() => navigate(`/timetable/${room.place}`)}
-              className="group bg-white p-5 rounded-3xl shadow-sm border border-gray-100 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all active:scale-[0.98]"
+              className="group cursor-pointer rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-sm transition-all hover:border-blue-300 hover:shadow-md active:scale-[0.98]"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center text-xl font-extrabold text-gray-900 group-hover:text-blue-600 transition-colors">
-                  <MapPin size={20} className="mr-1.5 text-blue-500" />
+              <div className="mb-1.5 flex items-start justify-between">
+                <div className="flex items-center text-lg font-extrabold leading-tight text-gray-900 transition-colors group-hover:text-blue-600">
+                  <MapPin size={18} className="mr-1 text-blue-500" />
                   {formatPlaceLabel(room.building, room.room)}
                 </div>
               </div>
-              <div className="flex items-center text-sm text-emerald-700 font-bold bg-emerald-50 w-fit px-3 py-1.5 rounded-lg border border-emerald-100">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+              <div className="flex items-center text-sm font-semibold text-emerald-700">
+                <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 {timeMode === 'custom' && customEndTime
                   ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
                   : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
