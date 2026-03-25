@@ -10,6 +10,7 @@ const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const START_HOUR = 9;
 const END_HOUR = 21;
 const HOUR_HEIGHT = 64;
+const TIME_COLUMN_WIDTH = 32;
 
 export default function Timetable() {
   const { place } = useParams();
@@ -82,102 +83,110 @@ export default function Timetable() {
               </div>
             </div>
 
-            <div className="overflow-x-auto no-scrollbar">
-              <div className="min-w-[820px] p-4">
-                <div className="grid grid-cols-8 border-b-2 border-slate-200 pb-2 mb-2">
-                  <div className="text-center text-xs font-bold text-slate-400">시간</div>
-                  {DAYS.map(day => (
-                    <div key={day} className="text-center text-sm font-bold text-slate-700">{day}</div>
-                  ))}
-                </div>
+            <div className="overflow-hidden px-1.5 py-3 sm:px-4">
+              <div
+                className="grid border-b-2 border-slate-200 pb-2 mb-2"
+                style={{ gridTemplateColumns: `${TIME_COLUMN_WIDTH}px repeat(7, minmax(0, 1fr))` }}
+              >
+                <div />
+                {DAYS.map(day => (
+                  <div key={day} className="text-center text-[11px] font-bold text-slate-700 sm:text-sm">{day}</div>
+                ))}
+              </div>
 
-                <div className="relative mt-2" style={{ height: `${(END_HOUR - START_HOUR) * HOUR_HEIGHT}px` }}>
-                  {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
-                    <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${i * HOUR_HEIGHT}px` }}>
-                      <div className="w-1/8 text-center text-xs font-medium text-slate-400 -mt-2.5 bg-white inline-block px-1">
-                        {`${(START_HOUR + i).toString().padStart(2, '0')}:00`}
-                      </div>
+              <div className="relative mt-2" style={{ height: `${(END_HOUR - START_HOUR) * HOUR_HEIGHT}px` }}>
+                {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
+                  <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${i * HOUR_HEIGHT}px` }}>
+                    <div
+                      className="text-center text-[10px] font-medium text-slate-400 -mt-2.5 bg-white inline-block"
+                      style={{ width: `${TIME_COLUMN_WIDTH}px` }}
+                    >
+                      {START_HOUR + i}
                     </div>
-                  ))}
+                  </div>
+                ))}
 
-                  {Array.from({ length: 7 }).map((_, i) => (
-                    <div key={i} className="absolute h-full border-l border-slate-100/70" style={{ left: `${(i + 1) * (100 / 8)}%` }} />
-                  ))}
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute h-full border-l border-slate-100/70"
+                    style={{ left: `calc(${TIME_COLUMN_WIDTH}px + ${(i + 1)} * ((100% - ${TIME_COLUMN_WIDTH}px) / 7))` }}
+                  />
+                ))}
 
-                  {schedule.map((item, idx) => {
-                    const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
-                    const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
-                    const isCurrent = isCurrentTimePlace(item.timeplace, now);
-                    const showCurrentBadge = isCurrent && height >= 56;
-                    const showTime = height >= 42;
-                    const showPlace = height >= 58;
-                    const showType = height >= 76;
+                {schedule.map((item, idx) => {
+                  const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
+                  const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
+                  const isCurrent = isCurrentTimePlace(item.timeplace, now);
+                  const showCurrentBadge = isCurrent && height >= 56;
+                  const showTime = height >= 42;
+                  const showPlace = height >= 58;
+                  const showType = height >= 76;
 
-                    if (top < 0 || top + height > (END_HOUR - START_HOUR) * HOUR_HEIGHT) {
-                      return null;
-                    }
+                  if (top < 0 || top + height > (END_HOUR - START_HOUR) * HOUR_HEIGHT) {
+                    return null;
+                  }
 
-                    return (
-                      <button
-                        key={`${item.subject.lectureId}-${idx}`}
-                        type="button"
-                        onClick={() => setSelectedLectureIndex(idx)}
-                        className={cn(
-                          'absolute flex flex-col items-start justify-start rounded-2xl px-3 py-2 overflow-hidden border transition-all text-left cursor-pointer',
-                          selectedLectureIndex === idx && 'ring-2 ring-blue-300',
-                          isCurrent
-                            ? 'z-10 border-emerald-300 bg-gradient-to-br from-emerald-100 via-cyan-50 to-white shadow-md shadow-emerald-100/80 ring-2 ring-emerald-200/80'
-                            : 'border-slate-200 bg-slate-50/95 shadow-sm shadow-slate-200/60 hover:border-emerald-200 hover:bg-slate-50'
-                        )}
-                        style={{
-                          top: `${top}px`,
-                          height: `${height}px`,
-                          left: `calc(${(item.timeplace.day + 1) * (100 / 8)}% + 4px)`,
-                          width: `calc(${100 / 8}% - 8px)`,
-                        }}
-                      >
-                        {showCurrentBadge && (
-                          <div className="mb-1 inline-flex rounded-full bg-emerald-600/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                            진행 중
-                          </div>
-                        )}
-                        <div className={cn(
-                          'shrink-0 text-xs font-extrabold leading-tight',
-                          height < 42 ? 'line-clamp-1' : 'line-clamp-2',
-                          isCurrent ? 'text-slate-950' : 'text-slate-800'
-                        )}>
-                          {item.subject.name}
+                  return (
+                    <button
+                      key={`${item.subject.lectureId}-${idx}`}
+                      type="button"
+                      onClick={() => setSelectedLectureIndex(idx)}
+                      className={cn(
+                        'absolute flex flex-col items-start justify-start rounded-xl px-1.5 py-1.5 sm:rounded-2xl sm:px-3 sm:py-2 overflow-hidden border transition-all text-left cursor-pointer',
+                        selectedLectureIndex === idx && 'ring-2 ring-blue-300',
+                        isCurrent
+                          ? 'z-10 border-emerald-300 bg-gradient-to-br from-emerald-100 via-cyan-50 to-white shadow-md shadow-emerald-100/80 ring-2 ring-emerald-200/80'
+                          : 'border-slate-200 bg-slate-50/95 shadow-sm shadow-slate-200/60 hover:border-emerald-200 hover:bg-slate-50'
+                      )}
+                      style={{
+                        top: `${top}px`,
+                        height: `${height}px`,
+                        left: `calc(${TIME_COLUMN_WIDTH}px + ${item.timeplace.day} * ((100% - ${TIME_COLUMN_WIDTH}px) / 7) + 2px)`,
+                        width: `calc(((100% - ${TIME_COLUMN_WIDTH}px) / 7) - 4px)`,
+                      }}
+                    >
+                      {showCurrentBadge && (
+                        <div className="mb-1 inline-flex rounded-full bg-emerald-600/10 px-1 py-0.5 text-[9px] font-bold text-emerald-700 sm:px-1.5 sm:text-[10px]">
+                          진행 중
                         </div>
-                        {showTime && (
-                          <div className={cn(
-                            'mt-1 shrink-0 text-[11px]',
-                            isCurrent ? 'font-semibold text-emerald-700' : 'font-medium text-slate-600'
-                          )}>
-                            {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
-                          </div>
-                        )}
-                        {showPlace && (
-                          <div className={cn(
-                            'mt-1 flex shrink-0 items-center text-[10px]',
-                            isCurrent ? 'font-medium text-slate-700' : 'font-medium text-slate-500'
-                          )}>
-                            <MapPin size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
-                            <span className="truncate">{formatPlaceLabel(item.timeplace.building, item.timeplace.room)}</span>
-                          </div>
-                        )}
-                        {showType && (
-                          <div className={cn(
-                            'mt-1 flex shrink-0 items-center text-[10px]',
-                            isCurrent ? 'font-medium text-slate-600' : 'font-medium text-slate-400'
-                          )}>
-                            <BookOpen size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
-                            <span className="truncate">{item.subject.type}</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                      )}
+                      <div className={cn(
+                        'shrink-0 text-[11px] font-extrabold leading-tight sm:text-xs',
+                        height < 42 ? 'line-clamp-1' : 'line-clamp-2',
+                        isCurrent ? 'text-slate-950' : 'text-slate-800'
+                      )}>
+                        {item.subject.name}
+                      </div>
+                      {showTime && (
+                        <div className={cn(
+                          'mt-1 shrink-0 text-[10px] sm:text-[11px]',
+                          isCurrent ? 'font-semibold text-emerald-700' : 'font-medium text-slate-600'
+                        )}>
+                          {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
+                        </div>
+                      )}
+                      {showPlace && (
+                        <div className={cn(
+                          'mt-1 flex shrink-0 items-center text-[9px] sm:text-[10px]',
+                          isCurrent ? 'font-medium text-slate-700' : 'font-medium text-slate-500'
+                        )}>
+                          <MapPin size={10} className={cn('mr-1 shrink-0 sm:h-[11px] sm:w-[11px]', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
+                          <span className="truncate">{formatPlaceLabel(item.timeplace.building, item.timeplace.room)}</span>
+                        </div>
+                      )}
+                      {showType && (
+                        <div className={cn(
+                          'mt-1 flex shrink-0 items-center text-[9px] sm:text-[10px]',
+                          isCurrent ? 'font-medium text-slate-600' : 'font-medium text-slate-400'
+                        )}>
+                          <BookOpen size={10} className={cn('mr-1 shrink-0 sm:h-[11px] sm:w-[11px]', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
+                          <span className="truncate">{item.subject.type}</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
