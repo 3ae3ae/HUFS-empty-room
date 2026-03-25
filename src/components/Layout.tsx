@@ -10,7 +10,7 @@ export default function Layout() {
   const navItems = [
     { path: '/', label: '빈 강의실 찾기', icon: Home },
     { path: '/timetable', label: '강의실 주간 시간표', icon: Calendar },
-    { path: '/professor', label: '교수님 스케줄 검색', icon: User },
+    { path: '/professor', label: '교수님 찾기 ❤️', icon: User },
   ];
 
   return (

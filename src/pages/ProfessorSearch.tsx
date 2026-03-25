@@ -43,8 +43,8 @@ export default function ProfessorSearch() {
   return (
     <div className="space-y-6 pb-8">
       <div className="space-y-2 px-2">
-        <h1 className="text-2xl font-extrabold text-slate-900">교수님 스케줄 검색</h1>
-        <p className="text-sm font-medium text-slate-500">교수님 이름으로 이번 학기 담당 수업을 시간표 형태로 확인하세요.</p>
+        <h1 className="text-2xl font-extrabold text-slate-900">교수님 찾기 ❤️</h1>
+        <p className="text-sm font-medium text-slate-500">우리 교수님, 지금은 뭐하고 계실까?</p>
       </div>
 
       <div className="relative">
@@ -55,7 +55,7 @@ export default function ProfessorSearch() {
           type="text"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          placeholder="교수님 이름 검색 (예: 홍지훈)"
+          placeholder="교수님 이름 검색"
           className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-4 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
         />
       </div>
