@@ -1,14 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatPlaceLabel, scheduleByPlace } from '../lib/data';
-import { Search, ChevronLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { Search, ChevronLeft, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { isCurrentTimePlace, useCurrentTime } from '../lib/currentTime';
 import LectureDetailModal from '../components/LectureDetailModal';
 
-const DAYS = ['월', '화', '수', '목', '금'];
+const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
 const START_HOUR = 9;
-const END_HOUR = 18;
+const END_HOUR = 21;
+const HOUR_HEIGHT = 64;
 
 export default function Timetable() {
   const { place } = useParams();
@@ -65,44 +66,56 @@ export default function Timetable() {
 
         {searchPlace && (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-              <div>
-                <h2 className="font-extrabold text-slate-900 text-lg flex items-center">
-                  <CalendarIcon size={20} className="mr-2.5 text-blue-500" />
-                  {formatPlaceLabel(searchBuilding, searchRoom)} 시간표
-                </h2>
-                <p className="mt-1 text-xs font-medium text-slate-500">강의 블록을 클릭하면 전체 정보를 볼 수 있습니다.</p>
+            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
+              <div className="flex items-center min-w-0">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 mr-4 shadow-sm shadow-blue-100/50">
+                  <CalendarIcon size={24} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-extrabold text-slate-900 text-lg truncate">{formatPlaceLabel(searchBuilding, searchRoom)}</h2>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">강의 블록을 클릭하면 전체 정보를 볼 수 있습니다.</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
+                <CalendarIcon size={14} className="mr-1.5" />
+                주간 시간표
               </div>
             </div>
 
             <div className="overflow-x-auto no-scrollbar">
-              <div className="min-w-[600px] p-4">
-                <div className="grid grid-cols-6 border-b-2 border-slate-200 pb-2 mb-2">
+              <div className="min-w-[820px] p-4">
+                <div className="grid grid-cols-8 border-b-2 border-slate-200 pb-2 mb-2">
                   <div className="text-center text-xs font-bold text-slate-400">시간</div>
                   {DAYS.map(day => (
                     <div key={day} className="text-center text-sm font-bold text-slate-700">{day}</div>
                   ))}
                 </div>
 
-                <div className="relative mt-2" style={{ height: `${(END_HOUR - START_HOUR) * 65}px` }}>
+                <div className="relative mt-2" style={{ height: `${(END_HOUR - START_HOUR) * HOUR_HEIGHT}px` }}>
                   {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
-                    <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${i * 65}px` }}>
-                      <div className="w-1/6 text-center text-xs font-medium text-slate-400 -mt-2.5 bg-white inline-block px-1">
-                        {START_HOUR + i}:00
+                    <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${i * HOUR_HEIGHT}px` }}>
+                      <div className="w-1/8 text-center text-xs font-medium text-slate-400 -mt-2.5 bg-white inline-block px-1">
+                        {`${(START_HOUR + i).toString().padStart(2, '0')}:00`}
                       </div>
                     </div>
                   ))}
 
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="absolute h-full border-l border-slate-100/50" style={{ left: `${(i + 1) * (100 / 6)}%` }} />
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="absolute h-full border-l border-slate-100/70" style={{ left: `${(i + 1) * (100 / 8)}%` }} />
                   ))}
 
                   {schedule.map((item, idx) => {
-                    if (item.timeplace.day > 4) return null;
-                    const top = (item.timeplace.startMin - START_HOUR * 60) * (65 / 60);
-                    const height = (item.timeplace.endMin - item.timeplace.startMin) * (65 / 60);
-                    if (top < 0 || top + height > (END_HOUR - START_HOUR) * 65) return null;
+                    const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
+                    const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
                     const isCurrent = isCurrentTimePlace(item.timeplace, now);
+                    const showCurrentBadge = isCurrent && height >= 56;
+                    const showTime = height >= 42;
+                    const showPlace = height >= 58;
+                    const showType = height >= 76;
+
+                    if (top < 0 || top + height > (END_HOUR - START_HOUR) * HOUR_HEIGHT) {
+                      return null;
+                    }
 
                     return (
                       <button
@@ -110,42 +123,57 @@ export default function Timetable() {
                         type="button"
                         onClick={() => setSelectedLectureIndex(idx)}
                         className={cn(
-                          'absolute rounded-xl p-2 overflow-hidden border transition-all text-left group cursor-pointer',
+                          'absolute flex flex-col items-start justify-start rounded-2xl px-3 py-2 overflow-hidden border transition-all text-left cursor-pointer',
                           selectedLectureIndex === idx && 'ring-2 ring-blue-300',
                           isCurrent
-                            ? 'z-10 border-blue-300 bg-blue-100 shadow-md shadow-blue-200/70 ring-2 ring-blue-200/80'
-                            : 'border-slate-200 bg-slate-50/92 shadow-sm shadow-slate-200/60 hover:border-blue-200 hover:bg-slate-50'
+                            ? 'z-10 border-emerald-300 bg-gradient-to-br from-emerald-100 via-cyan-50 to-white shadow-md shadow-emerald-100/80 ring-2 ring-emerald-200/80'
+                            : 'border-slate-200 bg-slate-50/95 shadow-sm shadow-slate-200/60 hover:border-emerald-200 hover:bg-slate-50'
                         )}
                         style={{
                           top: `${top}px`,
                           height: `${height}px`,
-                          left: `calc(${(item.timeplace.day + 1) * (100 / 6)}% + 4px)`,
-                          width: `calc(${100 / 6}% - 8px)`,
+                          left: `calc(${(item.timeplace.day + 1) * (100 / 8)}% + 4px)`,
+                          width: `calc(${100 / 8}% - 8px)`,
                         }}
                       >
-                        {isCurrent && (
-                          <div className="mb-1 inline-flex rounded-full bg-blue-600/10 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                        {showCurrentBadge && (
+                          <div className="mb-1 inline-flex rounded-full bg-emerald-600/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
                             진행 중
                           </div>
                         )}
                         <div className={cn(
-                          'text-xs font-extrabold leading-tight line-clamp-2',
-                          isCurrent ? 'text-blue-950' : 'text-slate-800 group-hover:text-slate-900'
+                          'shrink-0 text-xs font-extrabold leading-tight',
+                          height < 42 ? 'line-clamp-1' : 'line-clamp-2',
+                          isCurrent ? 'text-slate-950' : 'text-slate-800'
                         )}>
                           {item.subject.name}
                         </div>
-                        <div className={cn(
-                          'text-[11px] mt-1 truncate',
-                          isCurrent ? 'font-semibold text-blue-700' : 'font-medium text-slate-600'
-                        )}>
-                          {item.subject.professor}
-                        </div>
-                        <div className={cn(
-                          'text-[10px] mt-0.5',
-                          isCurrent ? 'font-semibold text-blue-500' : 'font-medium text-slate-400'
-                        )}>
-                          {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
-                        </div>
+                        {showTime && (
+                          <div className={cn(
+                            'mt-1 shrink-0 text-[11px]',
+                            isCurrent ? 'font-semibold text-emerald-700' : 'font-medium text-slate-600'
+                          )}>
+                            {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
+                          </div>
+                        )}
+                        {showPlace && (
+                          <div className={cn(
+                            'mt-1 flex shrink-0 items-center text-[10px]',
+                            isCurrent ? 'font-medium text-slate-700' : 'font-medium text-slate-500'
+                          )}>
+                            <MapPin size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
+                            <span className="truncate">{formatPlaceLabel(item.timeplace.building, item.timeplace.room)}</span>
+                          </div>
+                        )}
+                        {showType && (
+                          <div className={cn(
+                            'mt-1 flex shrink-0 items-center text-[10px]',
+                            isCurrent ? 'font-medium text-slate-600' : 'font-medium text-slate-400'
+                          )}>
+                            <BookOpen size={11} className={cn('mr-1 shrink-0', isCurrent ? 'text-emerald-500' : 'text-slate-400')} />
+                            <span className="truncate">{item.subject.type}</span>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -154,6 +182,7 @@ export default function Timetable() {
             </div>
           </div>
         )}
+
         {searchPlace && schedule.length === 0 && (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-100 border-dashed">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
