@@ -6,15 +6,23 @@ import { cn } from '../lib/utils';
 import campusMap from '../assets/campus_map.jpg';
 import ImageLightbox from '../components/ImageLightbox';
 
+const hourOptions = Array.from({ length: 12 }, (_, index) => index + 9);
+
+const formatHourValue = (hour: number) => hour.toString().padStart(2, '0');
+
+const formatHourLabel = (hour: string) => `${hour}시`;
+
 export default function Home() {
   const navigate = useNavigate();
+  const initialNow = new Date();
   const [timeMode, setTimeMode] = useState<'now' | 'custom'>('now');
   const [selectedBuildings, setSelectedBuildings] = useState<string[]>([...buildings]);
 
-  const [customDay, setCustomDay] = useState<number>(0);
-  const [customTime, setCustomTime] = useState<string>('09:00');
+  const [customDay, setCustomDay] = useState<number>(initialNow.getDay() === 0 ? 6 : initialNow.getDay() - 1);
+  const [customStartTime, setCustomStartTime] = useState<string>(formatHourValue(initialNow.getHours()));
+  const [customEndTime, setCustomEndTime] = useState<string>('');
 
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(initialNow);
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   useEffect(() => {
@@ -25,9 +33,17 @@ export default function Home() {
   }, [timeMode]);
 
   const targetDay = timeMode === 'now' ? (currentTime.getDay() === 0 ? 6 : currentTime.getDay() - 1) : customDay;
-  const targetMin = timeMode === 'now' ? currentTime.getHours() * 60 + currentTime.getMinutes() : parseInt(customTime.split(':')[0]) * 60 + parseInt(customTime.split(':')[1]);
+  const startMin = timeMode === 'now'
+    ? currentTime.getHours() * 60 + currentTime.getMinutes()
+    : parseInt(customStartTime, 10) * 60;
+  const endMin = timeMode === 'custom' && customEndTime ? parseInt(customEndTime, 10) * 60 : null;
+  const hasInvalidRange = endMin !== null && endMin <= startMin;
 
   const emptyRooms = useMemo(() => {
+    if (hasInvalidRange) {
+      return [];
+    }
+
     const result: { building: string, room: string, place: string, emptyUntil: number | null }[] = [];
     
     Object.entries(roomsByBuilding).forEach(([bldg, rooms]) => {
@@ -42,11 +58,14 @@ export default function Home() {
         let emptyUntil: number | null = null;
         
         for (const c of todayClasses) {
-          if (targetMin >= c.timeplace.startMin && targetMin < c.timeplace.endMin) {
+          const overlapsStart = startMin >= c.timeplace.startMin && startMin < c.timeplace.endMin;
+          const overlapsRange = endMin !== null && c.timeplace.startMin < endMin && c.timeplace.endMin > startMin;
+
+          if (overlapsStart || overlapsRange) {
             isCurrentlyEmpty = false;
             break;
           }
-          if (c.timeplace.startMin > targetMin) {
+          if (c.timeplace.startMin > startMin) {
             emptyUntil = c.timeplace.startMin;
             break;
           }
@@ -59,7 +78,7 @@ export default function Home() {
     });
     
     return result.sort((a, b) => a.building.localeCompare(b.building) || a.room.localeCompare(b.room));
-  }, [targetDay, targetMin, selectedBuildings]);
+  }, [endMin, hasInvalidRange, selectedBuildings, startMin, targetDay]);
 
   const formatTime = (mins: number) => {
     const h = Math.floor(mins / 60).toString().padStart(2, '0');
@@ -161,22 +180,78 @@ export default function Home() {
         </div>
 
         {timeMode === 'custom' && (
-          <div className="flex gap-3 animate-in fade-in slide-in-from-top-2">
-            <select 
-              value={customDay} 
-              onChange={e => setCustomDay(parseInt(e.target.value))}
-              className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              {['월', '화', '수', '목', '금', '토', '일'].map((d, i) => (
-                <option key={i} value={i}>{d}요일</option>
-              ))}
-            </select>
-            <input 
-              type="time" 
-              value={customTime}
-              onChange={e => setCustomTime(e.target.value)}
-              className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+          <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+            <div className="flex gap-3">
+              <select 
+                value={customDay} 
+                onChange={e => setCustomDay(parseInt(e.target.value))}
+                className="flex-1 bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                {['월', '화', '수', '목', '금', '토', '일'].map((d, i) => (
+                  <option key={i} value={i}>{d}요일</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="block text-xs font-semibold text-gray-500">시작 시간</span>
+                <select
+                  value={customStartTime}
+                  onChange={e => setCustomStartTime(e.target.value)}
+                  className="w-full appearance-none bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {hourOptions.map(hour => {
+                    const value = formatHourValue(hour);
+                    return (
+                      <option key={value} value={value}>
+                        {formatHourLabel(value)}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+
+              <label className="space-y-1.5">
+                <span className="block text-xs font-semibold text-gray-500">끝 시간</span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={customEndTime}
+                    onChange={e => setCustomEndTime(e.target.value)}
+                    className="w-full appearance-none bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">선택 안 함</option>
+                    {hourOptions.map(hour => {
+                      const value = formatHourValue(hour);
+                      return (
+                        <option key={value} value={value}>
+                          {formatHourLabel(value)}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  {customEndTime && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomEndTime('')}
+                      className="shrink-0 rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm font-semibold text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900"
+                    >
+                      초기화
+                    </button>
+                  )}
+                </div>
+              </label>
+            </div>
+
+            {hasInvalidRange && (
+              <p className="text-sm font-medium text-rose-600">끝 시간은 시작 시간보다 늦어야 합니다.</p>
+            )}
+
+            {customEndTime && !hasInvalidRange && (
+              <p className="text-sm font-medium text-gray-500">
+                선택한 강의실은 {formatHourLabel(customStartTime)}부터 {formatHourLabel(customEndTime)}까지 전부 비어 있어야 합니다.
+              </p>
+            )}
           </div>
         )}
 
@@ -246,7 +321,9 @@ export default function Home() {
               </div>
               <div className="flex items-center text-sm text-emerald-700 font-bold bg-emerald-50 w-fit px-3 py-1.5 rounded-lg border border-emerald-100">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
-                현재 비어있음 {room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}
+                {timeMode === 'custom' && customEndTime
+                  ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
+                  : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
               </div>
             </div>
           ))}
@@ -257,7 +334,9 @@ export default function Home() {
             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Clock size={32} className="text-gray-400" />
             </div>
-            <p className="text-gray-900 font-bold text-lg mb-1">빈 강의실이 없습니다</p>
+            <p className="text-gray-900 font-bold text-lg mb-1">
+              {hasInvalidRange ? '시간 범위를 다시 확인해주세요' : '빈 강의실이 없습니다'}
+            </p>
             <p className="text-gray-500 text-sm">다른 시간대나 건물을 선택해보세요.</p>
           </div>
         )}
