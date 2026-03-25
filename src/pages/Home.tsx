@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByBuilding } from '../lib/data';
 import { Clock, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
+import campusMap from '../assets/campus_map.jpg';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -95,21 +96,43 @@ export default function Home() {
   return (
     <div className="space-y-6 pb-8">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-blue-500 via-indigo-500 to-teal-400 rounded-[2rem] p-8 text-white shadow-lg overflow-hidden flex flex-col justify-center min-h-[40vh]">
-        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-40 h-40 bg-blue-300 opacity-20 rounded-full blur-3xl"></div>
-        
-        <div className="relative z-10 space-y-3">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-2">
-            <Sparkles size={16} className="mr-1.5 text-yellow-200" />
-            HUFS 빈 강의실 찾기
+      <div className="relative bg-gradient-to-br from-blue-500 via-cyan-500 to-teal-400 rounded-[2rem] p-6 sm:p-8 text-white shadow-lg overflow-hidden min-h-[40vh]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_28%),radial-gradient(circle_at_bottom_left,_rgba(255,255,255,0.18),_transparent_24%)]"></div>
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-36 h-36 bg-white/15 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-44 h-44 bg-cyan-200/20 rounded-full blur-3xl"></div>
+
+        <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] items-center">
+          <div className="space-y-3">
+            <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-2">
+              <Sparkles size={16} className="mr-1.5 text-amber-200" />
+              HUFS 빈 강의실 찾기
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+              {getGreeting()}
+            </h1>
+            <p className="text-cyan-50 text-lg sm:text-xl font-medium max-w-sm leading-relaxed">
+              지금 바로 사용할 수 있는<br />쾌적한 강의실을 찾아보세요.
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-            {getGreeting()}
-          </h1>
-          <p className="text-blue-50 text-lg sm:text-xl font-medium max-w-sm leading-relaxed">
-            지금 바로 사용할 수 있는<br/>쾌적한 강의실을 찾아보세요.
-          </p>
+
+          <div className="relative">
+            <div className="absolute inset-0 bg-white/25 blur-2xl scale-95 rounded-[2rem]"></div>
+            <div className="relative rounded-[1.75rem] border border-white/45 bg-white/18 backdrop-blur-md p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.22)]">
+              <div className="rounded-[1.2rem] bg-gradient-to-br from-slate-100 via-white to-cyan-50 p-2 shadow-inner">
+                <img
+                  src={campusMap}
+                  alt="캠퍼스 강의실 지도"
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white object-cover shadow-[0_12px_30px_rgba(15,23,42,0.12)]"
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3 px-1">
+                <p className="text-sm font-semibold text-white/95">강의실 위치를 한눈에 확인하세요</p>
+                <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white/90 border border-white/20">
+                  캠퍼스 지도
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
