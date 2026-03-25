@@ -4,6 +4,7 @@ import { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByB
 import { Clock, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 import campusMap from '../assets/campus_map.jpg';
+import ImageLightbox from '../components/ImageLightbox';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function Home() {
   const [customTime, setCustomTime] = useState<string>('09:00');
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
   useEffect(() => {
     if (timeMode === 'now') {
@@ -117,7 +119,12 @@ export default function Home() {
 
           <div className="relative">
             <div className="absolute inset-0 bg-white/25 blur-2xl scale-95 rounded-[2rem]"></div>
-            <div className="relative rounded-[1.75rem] border border-white/45 bg-white/18 backdrop-blur-md p-3 sm:p-4 shadow-[0_20px_60px_rgba(15,23,42,0.22)]">
+            <button
+              type="button"
+              onClick={() => setIsMapOpen(true)}
+              className="relative block w-full rounded-[1.75rem] border border-white/45 bg-white/18 p-3 text-left backdrop-blur-md shadow-[0_20px_60px_rgba(15,23,42,0.22)] transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white/70 sm:p-4"
+              aria-label="캠퍼스 지도를 크게 보기"
+            >
               <div className="rounded-[1.2rem] bg-gradient-to-br from-slate-100 via-white to-cyan-50 p-2 shadow-inner">
                 <img
                   src={campusMap}
@@ -128,10 +135,10 @@ export default function Home() {
               <div className="mt-3 flex items-center justify-between gap-3 px-1">
                 <p className="text-sm font-semibold text-white/95">강의실 위치를 한눈에 확인하세요</p>
                 <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white/90 border border-white/20">
-                  캠퍼스 지도
+                  클릭해서 확대
                 </span>
               </div>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -255,6 +262,14 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      <ImageLightbox
+        isOpen={isMapOpen}
+        src={campusMap}
+        alt="캠퍼스 강의실 지도"
+        title="캠퍼스 지도"
+        onClose={() => setIsMapOpen(false)}
+      />
     </div>
   );
 }
