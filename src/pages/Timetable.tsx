@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { formatPlaceLabel, scheduleByPlace } from '../lib/data';
 import { Search, ChevronLeft, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { isCurrentTimePlace, useCurrentTime } from '../lib/currentTime';
+import { getCurrentScheduleContext, isTimePlaceInContext, useCurrentTime } from '../lib/currentTime';
 import LectureDetailModal from '../components/LectureDetailModal';
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
@@ -15,6 +15,7 @@ const TIME_COLUMN_WIDTH = 32;
 export default function Timetable() {
   const { place } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchPlace, setSearchPlace] = useState(place || '');
   const [selectedLectureIndex, setSelectedLectureIndex] = useState<number | null>(null);
   const now = useCurrentTime();
@@ -32,12 +33,27 @@ export default function Timetable() {
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    navigate(`/timetable/${searchPlace}`);
+    const params = searchParams.toString();
+    navigate(`/timetable/${searchPlace}${params ? `?${params}` : ''}`);
   };
 
   const searchBuilding = searchPlace.charAt(0);
   const searchRoom = searchPlace.substring(1);
   const selectedLecture = selectedLectureIndex === null ? null : schedule[selectedLectureIndex] ?? null;
+  const selectedDay = searchParams.get('day');
+  const selectedStart = searchParams.get('start');
+  const hasSelectedContext = selectedDay !== null && selectedStart !== null;
+  const referenceContext = useMemo(() => {
+    if (!hasSelectedContext) {
+      return getCurrentScheduleContext(now);
+    }
+
+    return {
+      day: parseInt(selectedDay, 10),
+      minutes: parseInt(selectedStart, 10),
+    };
+  }, [hasSelectedContext, now, selectedDay, selectedStart]);
+  const activeBadgeLabel = hasSelectedContext ? '선택한 시간에 진행 중' : '현재 진행 중';
 
   return (
     <>
@@ -117,7 +133,7 @@ export default function Timetable() {
                 {schedule.map((item, idx) => {
                   const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
                   const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
-                  const isCurrent = isCurrentTimePlace(item.timeplace, now);
+                  const isCurrent = isTimePlaceInContext(item.timeplace, referenceContext);
                   const showCurrentBadge = isCurrent && height >= 56;
                   const showTime = height >= 42;
                   const showPlace = height >= 58;
@@ -148,7 +164,7 @@ export default function Timetable() {
                     >
                       {showCurrentBadge && (
                         <div className="mb-1 inline-flex rounded-full bg-emerald-600/10 px-1 py-0.5 text-[9px] font-bold text-emerald-700 sm:px-1.5 sm:text-[10px]">
-                          진행 중
+                          {hasSelectedContext ? '선택 시간 진행 중' : '진행 중'}
                         </div>
                       )}
                       <div className={cn(
@@ -206,7 +222,8 @@ export default function Timetable() {
         isOpen={selectedLecture !== null}
         subject={selectedLecture?.subject ?? null}
         timeplace={selectedLecture?.timeplace ?? null}
-        isCurrent={selectedLecture ? isCurrentTimePlace(selectedLecture.timeplace, now) : false}
+        isCurrent={selectedLecture ? isTimePlaceInContext(selectedLecture.timeplace, referenceContext) : false}
+        currentBadgeLabel={activeBadgeLabel}
         onClose={() => setSelectedLectureIndex(null)}
       />
     </>

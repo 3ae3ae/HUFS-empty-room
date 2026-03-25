@@ -142,6 +142,23 @@ export default function Home() {
     }));
   };
 
+  const createTimetableSearch = () => {
+    if (timeMode !== 'custom') {
+      return '';
+    }
+
+    const params = new URLSearchParams({
+      day: String(customDay),
+      start: String(startMin),
+    });
+
+    if (endMin !== null) {
+      params.set('end', String(endMin));
+    }
+
+    return `?${params.toString()}`;
+  };
+
   return (
     <div className="space-y-6 pb-8">
       {/* Hero Section */}
@@ -363,7 +380,7 @@ export default function Home() {
                       <button
                         key={room.place}
                         type="button"
-                        onClick={() => navigate(`/timetable/${room.place}`)}
+                        onClick={() => navigate(`/timetable/${room.place}${createTimetableSearch()}`)}
                         className="group flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-4 text-left transition-colors hover:bg-blue-50/60"
                       >
                         <div className="min-w-0">
@@ -373,8 +390,10 @@ export default function Home() {
                           </div>
                           <div className="mt-1 flex items-center text-sm font-semibold text-emerald-700">
                             <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            {timeMode === 'custom' && customEndTime
-                              ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
+                            {timeMode === 'custom'
+                              ? customEndTime
+                                ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
+                                : `${formatHourLabel(customStartTime)} 기준 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`
                               : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
                           </div>
                         </div>

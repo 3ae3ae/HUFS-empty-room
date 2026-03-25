@@ -10,6 +10,7 @@ interface LectureDetailModalProps {
   subject: ParsedSubject | null;
   timeplace: ParsedTimePlace | null;
   isCurrent?: boolean;
+  currentBadgeLabel?: string;
   onClose: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function LectureDetailModal({
   subject,
   timeplace,
   isCurrent = false,
+  currentBadgeLabel = '현재 진행 중',
   onClose,
 }: LectureDetailModalProps) {
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function LectureDetailModal({
             <div className="min-w-0">
               {isCurrent && (
                 <div className="mb-2 inline-flex rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-bold backdrop-blur-sm">
-                  현재 진행 중
+                  {currentBadgeLabel}
                 </div>
               )}
               <h2 className="text-xl font-extrabold leading-tight">{subject.name}</h2>
