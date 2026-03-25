@@ -27,6 +27,19 @@ export default function ProfessorSearch() {
     return `${h}:${m}`;
   };
 
+  const buildProfessorStatusText = (
+    prof: string,
+    currentItem: { subject: (typeof results)[number]['subjects'][number]; timeplace: (typeof results)[number]['subjects'][number]['parsedTimeplaces'][number] } | undefined
+  ) => {
+    if (!currentItem) {
+      return `${prof} 교수님의 현재 수업 정보가 없어요.`;
+    }
+
+    const placeLabel = formatPlaceLabel(currentItem.timeplace.building, currentItem.timeplace.room);
+
+    return `${prof} 교수님은 ${placeLabel}에서 ${currentItem.subject.name} 수업 중이세요.`;
+  };
+
   return (
     <div className="space-y-6 pb-8">
       <div className="space-y-2 px-2">
@@ -57,6 +70,8 @@ export default function ProfessorSearch() {
               }))
             )
             .sort((a, b) => a.timeplace.day - b.timeplace.day || a.timeplace.startMin - b.timeplace.startMin);
+          const currentItem = scheduleItems.find(item => isCurrentTimePlace(item.timeplace, now));
+          const statusText = buildProfessorStatusText(prof, currentItem);
 
           return (
             <div key={prof} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -73,6 +88,17 @@ export default function ProfessorSearch() {
                 <div className="hidden sm:flex items-center text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
                   <CalendarIcon size={14} className="mr-1.5" />
                   주간 시간표
+                </div>
+              </div>
+
+              <div className="px-5 py-4 border-b border-slate-100">
+                <div
+                  className={cn(
+                    'rounded-2xl px-4 py-3 text-sm font-semibold',
+                    currentItem ? 'bg-emerald-50 text-emerald-900' : 'bg-slate-50 text-slate-600'
+                  )}
+                >
+                  {statusText}
                 </div>
               </div>
 
