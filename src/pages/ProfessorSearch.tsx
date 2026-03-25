@@ -1,15 +1,18 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatPlaceLabel, scheduleByProfessor } from '../lib/data';
-import { Search, User, BookOpen, Clock, MapPin } from 'lucide-react';
+import { Search, User, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide-react';
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const START_HOUR = 9;
+const END_HOUR = 21;
+const HOUR_HEIGHT = 64;
 
 export default function ProfessorSearch() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const results = useMemo(() => {
     if (!searchTerm.trim()) return [];
-    
+
     return Object.entries(scheduleByProfessor)
       .filter(([prof]) => prof.includes(searchTerm))
       .map(([prof, subjects]) => ({ prof, subjects }));
@@ -25,7 +28,7 @@ export default function ProfessorSearch() {
     <div className="space-y-6 pb-8">
       <div className="space-y-2 px-2">
         <h1 className="text-2xl font-extrabold text-slate-900">교수님 스케줄 검색</h1>
-        <p className="text-sm font-medium text-slate-500">교수님 이름으로 이번 학기 담당 수업을 검색해보세요.</p>
+        <p className="text-sm font-medium text-slate-500">교수님 이름으로 이번 학기 담당 수업을 시간표 형태로 확인하세요.</p>
       </div>
 
       <div className="relative">
@@ -42,49 +45,98 @@ export default function ProfessorSearch() {
       </div>
 
       <div className="space-y-5">
-        {results.map(({ prof, subjects }) => (
-          <div key={prof} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 mr-4 shadow-sm shadow-blue-100/50">
-                <User size={24} />
-              </div>
-              <div>
-                <h2 className="font-extrabold text-slate-900 text-lg">{prof} 교수님</h2>
-                <p className="text-xs font-medium text-slate-500 mt-0.5">총 {subjects.length}개의 수업</p>
-              </div>
-            </div>
-            <div className="divide-y divide-slate-50">
-              {subjects.map((sub, idx) => (
-                <div key={idx} className="p-5 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="font-bold text-slate-800 flex items-center text-base">
-                      <BookOpen size={18} className="mr-2.5 text-blue-400" />
-                      {sub.name}
-                    </div>
-                    <span className="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg whitespace-nowrap ml-3">
-                      {sub.type}
-                    </span>
+        {results.map(({ prof, subjects }) => {
+          const scheduleItems = subjects
+            .flatMap(subject =>
+              subject.parsedTimeplaces.map(timeplace => ({
+                subject,
+                timeplace,
+              }))
+            )
+            .sort((a, b) => a.timeplace.day - b.timeplace.day || a.timeplace.startMin - b.timeplace.startMin);
+
+          return (
+            <div key={prof} className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
+                <div className="flex items-center min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 mr-4 shadow-sm shadow-blue-100/50">
+                    <User size={24} />
                   </div>
-                  
-                  <div className="space-y-2 ml-7">
-                    {sub.parsedTimeplaces.map((tp, i) => (
-                      <div key={i} className="flex flex-wrap gap-4 text-sm font-medium text-slate-600">
-                        <div className="flex items-center bg-slate-50 px-2.5 py-1 rounded-md">
-                          <Clock size={14} className="mr-1.5 text-slate-400" />
-                          {DAYS[tp.day]}요일 {formatTime(tp.startMin)} - {formatTime(tp.endMin)}
-                        </div>
-                        <div className="flex items-center bg-slate-50 px-2.5 py-1 rounded-md">
-                          <MapPin size={14} className="mr-1.5 text-slate-400" />
-                          {formatPlaceLabel(tp.building, tp.room)}
+                  <div className="min-w-0">
+                    <h2 className="font-extrabold text-slate-900 text-lg truncate">{prof} 교수님</h2>
+                    <p className="text-xs font-medium text-slate-500 mt-0.5">총 {subjects.length}개 과목, {scheduleItems.length}개 시간 블록</p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
+                  <CalendarIcon size={14} className="mr-1.5" />
+                  주간 시간표
+                </div>
+              </div>
+
+              <div className="overflow-x-auto no-scrollbar">
+                <div className="min-w-[820px] p-4">
+                  <div className="grid grid-cols-8 border-b-2 border-slate-200 pb-2 mb-2">
+                    <div className="text-center text-xs font-bold text-slate-400">시간</div>
+                    {DAYS.map(day => (
+                      <div key={day} className="text-center text-sm font-bold text-slate-700">{day}</div>
+                    ))}
+                  </div>
+
+                  <div className="relative mt-2" style={{ height: `${(END_HOUR - START_HOUR) * HOUR_HEIGHT}px` }}>
+                    {Array.from({ length: END_HOUR - START_HOUR + 1 }).map((_, i) => (
+                      <div key={i} className="absolute w-full border-t border-slate-100" style={{ top: `${i * HOUR_HEIGHT}px` }}>
+                        <div className="w-1/8 text-center text-xs font-medium text-slate-400 -mt-2.5 bg-white inline-block px-1">
+                          {`${(START_HOUR + i).toString().padStart(2, '0')}:00`}
                         </div>
                       </div>
                     ))}
+
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} className="absolute h-full border-l border-slate-100/70" style={{ left: `${(i + 1) * (100 / 8)}%` }} />
+                    ))}
+
+                    {scheduleItems.map((item, idx) => {
+                      const top = (item.timeplace.startMin - START_HOUR * 60) * (HOUR_HEIGHT / 60);
+                      const height = (item.timeplace.endMin - item.timeplace.startMin) * (HOUR_HEIGHT / 60);
+
+                      if (top < 0 || top + height > (END_HOUR - START_HOUR) * HOUR_HEIGHT) {
+                        return null;
+                      }
+
+                      return (
+                        <div
+                          key={`${item.subject.lectureId}-${idx}`}
+                          className="absolute rounded-2xl px-3 py-2 overflow-hidden shadow-sm border border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50 hover:shadow-md transition-all"
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            left: `calc(${(item.timeplace.day + 1) * (100 / 8)}% + 4px)`,
+                            width: `calc(${100 / 8}% - 8px)`,
+                          }}
+                        >
+                          <div className="text-xs font-extrabold text-slate-900 leading-tight line-clamp-2">
+                            {item.subject.name}
+                          </div>
+                          <div className="mt-1 text-[11px] font-semibold text-emerald-700">
+                            {formatTime(item.timeplace.startMin)} - {formatTime(item.timeplace.endMin)}
+                          </div>
+                          <div className="mt-1 flex items-center text-[10px] font-medium text-slate-600">
+                            <MapPin size={11} className="mr-1 shrink-0 text-slate-400" />
+                            <span className="truncate">{formatPlaceLabel(item.timeplace.building, item.timeplace.room)}</span>
+                          </div>
+                          <div className="mt-1 flex items-center text-[10px] font-medium text-slate-500">
+                            <BookOpen size={11} className="mr-1 shrink-0 text-slate-400" />
+                            <span className="truncate">{item.subject.type}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {searchTerm && results.length === 0 && (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-100 border-dashed">
