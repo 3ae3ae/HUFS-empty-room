@@ -4,10 +4,11 @@ import { Search, User, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide
 import { cn } from '../lib/utils';
 import { isCurrentTimePlace, useCurrentTime } from '../lib/currentTime';
 
-const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const DAYS = ['월', '화', '수', '목', '금'];
 const START_HOUR = 9;
 const END_HOUR = 21;
 const HOUR_HEIGHT = 64;
+const GRID_COLUMNS = DAYS.length + 1;
 
 export default function ProfessorSearch() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,6 +70,7 @@ export default function ProfessorSearch() {
                 timeplace,
               }))
             )
+            .filter(item => item.timeplace.day < DAYS.length)
             .sort((a, b) => a.timeplace.day - b.timeplace.day || a.timeplace.startMin - b.timeplace.startMin);
           const currentItem = scheduleItems.find(item => isCurrentTimePlace(item.timeplace, now));
           const statusText = buildProfessorStatusText(prof, currentItem);
@@ -104,7 +106,10 @@ export default function ProfessorSearch() {
 
               <div className="overflow-x-auto no-scrollbar">
                 <div className="min-w-[820px] p-4">
-                  <div className="grid grid-cols-8 border-b-2 border-slate-200 pb-2 mb-2">
+                  <div
+                    className="grid border-b-2 border-slate-200 pb-2 mb-2"
+                    style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
+                  >
                     <div className="text-center text-xs font-bold text-slate-400">시간</div>
                     {DAYS.map(day => (
                       <div key={day} className="text-center text-sm font-bold text-slate-700">{day}</div>
@@ -120,8 +125,8 @@ export default function ProfessorSearch() {
                       </div>
                     ))}
 
-                    {Array.from({ length: 7 }).map((_, i) => (
-                      <div key={i} className="absolute h-full border-l border-slate-100/70" style={{ left: `${(i + 1) * (100 / 8)}%` }} />
+                    {Array.from({ length: DAYS.length }).map((_, i) => (
+                      <div key={i} className="absolute h-full border-l border-slate-100/70" style={{ left: `${(i + 1) * (100 / GRID_COLUMNS)}%` }} />
                     ))}
 
                     {scheduleItems.map((item, idx) => {
@@ -145,8 +150,8 @@ export default function ProfessorSearch() {
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
-                            left: `calc(${(item.timeplace.day + 1) * (100 / 8)}% + 4px)`,
-                            width: `calc(${100 / 8}% - 8px)`,
+                            left: `calc(${(item.timeplace.day + 1) * (100 / GRID_COLUMNS)}% + 4px)`,
+                            width: `calc(${100 / GRID_COLUMNS}% - 8px)`,
                           }}
                         >
                           {isCurrent && (

@@ -6,7 +6,7 @@ import { cn } from '../lib/utils';
 import { getCurrentScheduleContext, isTimePlaceInContext, useCurrentTime } from '../lib/currentTime';
 import LectureDetailModal from '../components/LectureDetailModal';
 
-const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
+const DAYS = ['월', '화', '수', '목', '금'];
 const START_HOUR = 9;
 const END_HOUR = 21;
 const HOUR_HEIGHT = 64;
@@ -22,7 +22,7 @@ export default function Timetable() {
 
   const schedule = useMemo(() => {
     if (!searchPlace) return [];
-    return scheduleByPlace[searchPlace] || [];
+    return (scheduleByPlace[searchPlace] || []).filter(item => item.timeplace.day < DAYS.length);
   }, [searchPlace]);
 
   const formatTime = (mins: number) => {
@@ -100,9 +100,9 @@ export default function Timetable() {
             </div>
 
             <div className="overflow-hidden px-1.5 py-3 sm:px-4">
-              <div
+                <div
                 className="grid border-b-2 border-slate-200 pb-2 mb-2"
-                style={{ gridTemplateColumns: `${TIME_COLUMN_WIDTH}px repeat(7, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: `${TIME_COLUMN_WIDTH}px repeat(${DAYS.length}, minmax(0, 1fr))` }}
               >
                 <div />
                 {DAYS.map(day => (
@@ -122,11 +122,11 @@ export default function Timetable() {
                   </div>
                 ))}
 
-                {Array.from({ length: 7 }).map((_, i) => (
+                {Array.from({ length: DAYS.length }).map((_, i) => (
                   <div
                     key={i}
                     className="absolute h-full border-l border-slate-100/70"
-                    style={{ left: `calc(${TIME_COLUMN_WIDTH}px + ${(i + 1)} * ((100% - ${TIME_COLUMN_WIDTH}px) / 7))` }}
+                    style={{ left: `calc(${TIME_COLUMN_WIDTH}px + ${(i + 1)} * ((100% - ${TIME_COLUMN_WIDTH}px) / ${DAYS.length}))` }}
                   />
                 ))}
 
@@ -158,8 +158,8 @@ export default function Timetable() {
                       style={{
                         top: `${top}px`,
                         height: `${height}px`,
-                        left: `calc(${TIME_COLUMN_WIDTH}px + ${item.timeplace.day} * ((100% - ${TIME_COLUMN_WIDTH}px) / 7) + 2px)`,
-                        width: `calc(((100% - ${TIME_COLUMN_WIDTH}px) / 7) - 4px)`,
+                        left: `calc(${TIME_COLUMN_WIDTH}px + ${item.timeplace.day} * ((100% - ${TIME_COLUMN_WIDTH}px) / ${DAYS.length}) + 2px)`,
+                        width: `calc(((100% - ${TIME_COLUMN_WIDTH}px) / ${DAYS.length}) - 4px)`,
                       }}
                     >
                       {showCurrentBadge && (
