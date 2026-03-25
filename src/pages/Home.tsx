@@ -7,6 +7,7 @@ import campusMap from '../assets/campus_map.jpg';
 import ImageLightbox from '../components/ImageLightbox';
 
 const hourOptions = Array.from({ length: 12 }, (_, index) => index + 9);
+const DAY_START_MIN = hourOptions[0] * 60;
 
 const formatHourValue = (hour: number) => hour.toString().padStart(2, '0');
 
@@ -45,7 +46,14 @@ export default function Home() {
       return [];
     }
 
-    const result: { building: string, room: string, place: string, emptyUntil: number | null }[] = [];
+    const result: {
+      building: string;
+      room: string;
+      place: string;
+      emptyFrom: number | null;
+      emptyUntil: number | null;
+      hasTodayClasses: boolean;
+    }[] = [];
     
     Object.entries(roomsByBuilding).forEach(([bldg, rooms]) => {
       if (!selectedBuildings.includes(bldg)) return;
@@ -54,11 +62,29 @@ export default function Home() {
         const place = bldg + room;
         const classes = scheduleByPlace[place] || [];
         const todayClasses = classes.filter(c => c.timeplace.day === targetDay).sort((a, b) => a.timeplace.startMin - b.timeplace.startMin);
-        
+
+        if (todayClasses.length === 0) {
+          result.push({
+            building: bldg,
+            room,
+            place,
+            emptyFrom: null,
+            emptyUntil: null,
+            hasTodayClasses: false,
+          });
+          return;
+        }
+
         let isCurrentlyEmpty = true;
+        let emptyFrom: number | null = DAY_START_MIN;
         let emptyUntil: number | null = null;
-        
+
         for (const c of todayClasses) {
+          if (c.timeplace.endMin <= startMin) {
+            emptyFrom = c.timeplace.endMin;
+            continue;
+          }
+
           const overlapsStart = startMin >= c.timeplace.startMin && startMin < c.timeplace.endMin;
           const overlapsRange = endMin !== null && c.timeplace.startMin < endMin && c.timeplace.endMin > startMin;
 
@@ -71,9 +97,16 @@ export default function Home() {
             break;
           }
         }
-        
+
         if (isCurrentlyEmpty) {
-          result.push({ building: bldg, room, place, emptyUntil });
+          result.push({
+            building: bldg,
+            room,
+            place,
+            emptyFrom,
+            emptyUntil,
+            hasTodayClasses: true,
+          });
         }
       });
     });
@@ -105,6 +138,22 @@ export default function Home() {
     const h = Math.floor(mins / 60).toString().padStart(2, '0');
     const m = (mins % 60).toString().padStart(2, '0');
     return `${h}:${m}`;
+  };
+
+  const getAvailabilityLabel = (room: (typeof emptyRooms)[number]) => {
+    if (!room.hasTodayClasses) {
+      return '오늘 일정 없음';
+    }
+
+    if (room.emptyUntil === null) {
+      return `${formatTime(room.emptyFrom ?? startMin)} 이후 일정 없음`;
+    }
+
+    if (timeMode === 'now') {
+      return `~${formatTime(room.emptyUntil)}까지`;
+    }
+
+    return `${formatTime(room.emptyFrom ?? startMin)} - ${formatTime(room.emptyUntil)} 비어있음`;
   };
 
   const toggleAll = () => {
@@ -390,11 +439,7 @@ export default function Home() {
                           </div>
                           <div className="mt-1 flex items-center text-sm font-semibold text-emerald-700">
                             <div className="mr-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            {timeMode === 'custom'
-                              ? customEndTime
-                                ? `${formatHourLabel(customStartTime)} - ${formatHourLabel(customEndTime)} 비어있음`
-                                : `${formatHourLabel(customStartTime)} 기준 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`
-                              : `현재 비어있음 ${room.emptyUntil ? `- ${formatTime(room.emptyUntil)}까지` : '- 오늘 일정 없음'}`}
+                            {getAvailabilityLabel(room)}
                           </div>
                         </div>
                         <ChevronDown

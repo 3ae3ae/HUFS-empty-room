@@ -136,7 +136,6 @@ export default function LectureDetailModal({
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Lecture</p>
                   <p className="mt-1 text-sm font-semibold text-slate-800">{subject.code}</p>
-                  <p className="mt-1 text-xs font-medium text-slate-500">수강번호 {subject.lectureId}</p>
                 </div>
               </div>
             </div>
