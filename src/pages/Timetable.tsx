@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { scheduleByPlace } from '../lib/data';
+import { formatPlaceLabel, scheduleByPlace } from '../lib/data';
 import { Search, ChevronLeft, Calendar as CalendarIcon } from 'lucide-react';
 
 const DAYS = ['월', '화', '수', '목', '금'];
@@ -27,6 +27,9 @@ export default function Timetable() {
     e.preventDefault();
     navigate(`/timetable/${searchPlace}`);
   };
+
+  const searchBuilding = searchPlace.charAt(0);
+  const searchRoom = searchPlace.substring(1);
 
   return (
     <div className="space-y-6 pb-8">
@@ -55,7 +58,7 @@ export default function Timetable() {
           <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
             <h2 className="font-extrabold text-slate-900 text-lg flex items-center">
               <CalendarIcon size={20} className="mr-2.5 text-blue-500" />
-              {searchPlace.charAt(0)}관 {searchPlace.substring(1)}호 시간표
+              {formatPlaceLabel(searchBuilding, searchRoom)} 시간표
             </h2>
           </div>
           

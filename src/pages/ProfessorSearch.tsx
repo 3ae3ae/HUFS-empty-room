@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { scheduleByProfessor } from '../lib/data';
+import { formatPlaceLabel, scheduleByProfessor } from '../lib/data';
 import { Search, User, BookOpen, Clock, MapPin } from 'lucide-react';
 
 const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
@@ -75,7 +75,7 @@ export default function ProfessorSearch() {
                         </div>
                         <div className="flex items-center bg-slate-50 px-2.5 py-1 rounded-md">
                           <MapPin size={14} className="mr-1.5 text-slate-400" />
-                          {tp.building}관 {tp.room}호
+                          {formatPlaceLabel(tp.building, tp.room)}
                         </div>
                       </div>
                     ))}

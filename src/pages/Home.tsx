@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildings, scheduleByPlace, roomsByBuilding } from '../lib/data';
+import { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByBuilding } from '../lib/data';
 import { Clock, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -185,7 +185,7 @@ export default function Home() {
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                   )}
                 >
-                  {bldg}관
+                  {getBuildingName(bldg)}
                 </button>
               );
             })}
@@ -211,7 +211,7 @@ export default function Home() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center text-xl font-extrabold text-gray-900 group-hover:text-blue-600 transition-colors">
                   <MapPin size={20} className="mr-1.5 text-blue-500" />
-                  {room.building}관 {room.room}호
+                  {formatPlaceLabel(room.building, room.room)}
                 </div>
               </div>
               <div className="flex items-center text-sm text-emerald-700 font-bold bg-emerald-50 w-fit px-3 py-1.5 rounded-lg border border-emerald-100">
