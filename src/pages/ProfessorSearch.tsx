@@ -32,7 +32,7 @@ export default function ProfessorSearch() {
     currentItem: { subject: (typeof results)[number]['subjects'][number]; timeplace: (typeof results)[number]['subjects'][number]['parsedTimeplaces'][number] } | undefined
   ) => {
     if (!currentItem) {
-      return `${prof} 교수님의 현재 수업 정보가 없어요. 😭`;
+      return `${prof} 교수님의 현재 수업 정보가 없어요. 😭😭😭`;
     }
 
     const placeLabel = formatPlaceLabel(currentItem.timeplace.building, currentItem.timeplace.room);
