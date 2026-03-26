@@ -100,7 +100,7 @@ export default function Timetable() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-extrabold text-slate-900 text-lg truncate">{formatPlaceLabel(searchBuilding, searchRoom)}</h2>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">{shortLabel} 캠퍼스 기준 시간표입니다.</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">개설 강의 목록 기준 시간표입니다.</p>
                 </div>
               </div>
               <div className="hidden sm:flex items-center text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">

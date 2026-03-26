@@ -47,7 +47,7 @@ export default function ProfessorSearch() {
     <div className="space-y-6 pb-8">
       <div className="space-y-2 px-2">
         <h1 className="text-2xl font-extrabold text-slate-900">교수님 찾기</h1>
-        <p className="text-sm font-medium text-slate-500">{shortLabel} 캠퍼스 기준으로 교수님 시간표를 확인해보세요.</p>
+        <p className="text-sm font-medium text-slate-500">우리 교수님, 지금은 뭐하고 계실까?</p>
       </div>
 
       <div className="relative">

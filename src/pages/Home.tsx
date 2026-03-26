@@ -227,7 +227,7 @@ export default function Home() {
           <div className="space-y-3">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-2">
               <Sparkles size={16} className="mr-1.5 text-amber-200" />
-              {shortLabel} 캠퍼스 빈 강의실 찾기
+              HUFS 빈 강의실 찾기
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
               {getGreeting()}
@@ -253,7 +253,7 @@ export default function Home() {
                 />
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 px-1">
-                <p className="text-sm font-semibold text-white/95">{shortLabel} 캠퍼스 강의실 위치를 한눈에 확인하세요</p>
+                <p className="text-sm font-semibold text-white/95">강의실 위치를 한눈에 확인하세요</p>
                 <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white/90 border border-white/20">
                   클릭해서 확대
                 </span>
