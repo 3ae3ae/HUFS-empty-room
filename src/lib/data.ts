@@ -1,5 +1,5 @@
-import subjectsGlobalData from '../data/subjects_global.json';
-import subjectsSeoulData from '../data/subjects_seoul.json';
+import subjectsGlobalUrl from '../data/subjects_global.json?url';
+import subjectsSeoulUrl from '../data/subjects_seoul.json?url';
 
 export type CampusKey = 'global' | 'seoul';
 
@@ -60,7 +60,6 @@ interface CampusDefinition {
   label: string;
   shortLabel: string;
   buildingNames: Record<string, string>;
-  subjectsData: Subject[];
 }
 
 const globalBuildingNames: Record<string, string> = {
@@ -95,16 +94,19 @@ const campusDefinitions = {
     label: '글로벌 캠퍼스',
     shortLabel: '글로벌',
     buildingNames: globalBuildingNames,
-    subjectsData: subjectsGlobalData as Subject[],
   },
   seoul: {
     key: 'seoul',
     label: '서울 캠퍼스',
     shortLabel: '서울',
     buildingNames: seoulBuildingNames,
-    subjectsData: subjectsSeoulData as Subject[],
   },
 } satisfies Record<CampusKey, CampusDefinition>;
+
+const subjectDataUrls: Record<CampusKey, string> = {
+  global: subjectsGlobalUrl,
+  seoul: subjectsSeoulUrl,
+};
 
 const isNumericCode = (value: string) => /^\d+$/.test(value);
 
@@ -170,7 +172,7 @@ const parsePlace = (rawPlace: string, buildingCodes: string[]) => {
 
 const shouldAppendRoomSuffix = (room: string) => /^[0-9]+(?:-[0-9]+)?$/.test(room);
 
-const createCampusDataset = (definition: CampusDefinition): CampusDataset => {
+const createCampusDataset = (definition: CampusDefinition, subjectsData: Subject[]): CampusDataset => {
   const buildingCodes = buildSortableBuildingCodes(definition.buildingNames);
   const getBuildingName = (building: string) => definition.buildingNames[building] ?? building;
   const formatPlaceLabel = (building: string, room: string) => {
@@ -189,7 +191,7 @@ const createCampusDataset = (definition: CampusDefinition): CampusDataset => {
     return `${getBuildingName(building)} ${room}`;
   };
 
-  const subjects: ParsedSubject[] = definition.subjectsData.map(subject => ({
+  const subjects: ParsedSubject[] = subjectsData.map(subject => ({
     ...subject,
     parsedTimeplaces: subject.timeplaces.flatMap(timeplace => {
       const parsedPlace = parsePlace(timeplace.place, buildingCodes);
@@ -257,10 +259,26 @@ const createCampusDataset = (definition: CampusDefinition): CampusDataset => {
   };
 };
 
-export const campusDataByKey = {
-  global: createCampusDataset(campusDefinitions.global),
-  seoul: createCampusDataset(campusDefinitions.seoul),
-} satisfies Record<CampusKey, CampusDataset>;
+const campusDataCache = new Map<CampusKey, CampusDataset>();
+
+export const loadCampusData = async (campus: CampusKey): Promise<CampusDataset> => {
+  const cachedData = campusDataCache.get(campus);
+
+  if (cachedData) {
+    return cachedData;
+  }
+
+  const response = await fetch(subjectDataUrls[campus]);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load ${campus} campus data.`);
+  }
+
+  const subjectsData = await response.json() as Subject[];
+  const dataset = createCampusDataset(campusDefinitions[campus], subjectsData);
+  campusDataCache.set(campus, dataset);
+  return dataset;
+};
 
 export const campusOptions = (Object.keys(campusDefinitions) as CampusKey[]).map(key => ({
   key,
