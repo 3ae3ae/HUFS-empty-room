@@ -6,6 +6,7 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import { CampusProvider } from './lib/campus';
 
 const Home = lazy(() => import('./pages/Home'));
 const Timetable = lazy(() => import('./pages/Timetable'));
@@ -23,16 +24,18 @@ function RouteFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Home />} />
-            <Route path="timetable/:place?" element={<Timetable />} />
-            <Route path="professor" element={<ProfessorSearch />} />
-          </Route>
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+    <CampusProvider>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              <Route path="timetable/:place?" element={<Timetable />} />
+              <Route path="professor" element={<ProfessorSearch />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </CampusProvider>
   );
 }

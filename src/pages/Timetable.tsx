@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { formatPlaceLabel, scheduleByPlace } from '../lib/data';
 import { Search, ChevronLeft, Calendar as CalendarIcon, BookOpen, MapPin } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { getCurrentScheduleContext, isTimePlaceInContext, useCurrentTime } from '../lib/currentTime';
 import LectureDetailModal from '../components/LectureDetailModal';
+import { useCampus } from '../lib/campus';
 
 const DAYS = ['월', '화', '수', '목', '금'];
 const START_HOUR = 9;
@@ -19,11 +19,14 @@ export default function Timetable() {
   const [searchPlace, setSearchPlace] = useState(place || '');
   const [selectedLectureIndex, setSelectedLectureIndex] = useState<number | null>(null);
   const now = useCurrentTime();
+  const { campus, campusData } = useCampus();
+  const { formatPlaceLabel, scheduleByPlace, shortLabel } = campusData;
+  const normalizedSearchPlace = searchPlace.trim().toUpperCase();
 
   const schedule = useMemo(() => {
-    if (!searchPlace) return [];
-    return (scheduleByPlace[searchPlace] || []).filter(item => item.timeplace.day < DAYS.length);
-  }, [searchPlace]);
+    if (!normalizedSearchPlace) return [];
+    return (scheduleByPlace[normalizedSearchPlace] || []).filter(item => item.timeplace.day < DAYS.length);
+  }, [normalizedSearchPlace, scheduleByPlace]);
 
   const formatTime = (mins: number) => {
     const h = Math.floor(mins / 60).toString().padStart(2, '0');
@@ -33,12 +36,19 @@ export default function Timetable() {
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const normalizedPlace = normalizedSearchPlace;
+
+    if (!normalizedPlace) {
+      return;
+    }
+
+    setSearchPlace(normalizedPlace);
     const params = searchParams.toString();
-    navigate(`/timetable/${searchPlace}${params ? `?${params}` : ''}`);
+    navigate(`/timetable/${encodeURIComponent(normalizedPlace)}${params ? `?${params}` : ''}`);
   };
 
-  const searchBuilding = searchPlace.charAt(0);
-  const searchRoom = searchPlace.substring(1);
+  const searchBuilding = schedule[0]?.timeplace.building ?? normalizedSearchPlace.charAt(0);
+  const searchRoom = schedule[0]?.timeplace.room ?? normalizedSearchPlace.substring(1);
   const selectedLecture = selectedLectureIndex === null ? null : schedule[selectedLectureIndex] ?? null;
   const selectedDay = searchParams.get('day');
   const selectedStart = searchParams.get('start');
@@ -73,15 +83,15 @@ export default function Timetable() {
             type="text"
             value={searchPlace}
             onChange={e => {
-              setSearchPlace(e.target.value);
+              setSearchPlace(e.target.value.toUpperCase());
               setSelectedLectureIndex(null);
             }}
-            placeholder="건물/강의실 검색 (예: 0209)"
+            placeholder={campus === 'seoul' ? '건물/강의실 검색 (예: 1202, C301)' : '건물/강의실 검색 (예: 0209)'}
             className="w-full bg-white border-none rounded-2xl py-4 pl-12 pr-4 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
           />
         </form>
 
-        {searchPlace && (
+        {normalizedSearchPlace && (
           <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4">
               <div className="flex items-center min-w-0">
@@ -90,7 +100,7 @@ export default function Timetable() {
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-extrabold text-slate-900 text-lg truncate">{formatPlaceLabel(searchBuilding, searchRoom)}</h2>
-                  <p className="text-xs font-medium text-slate-500 mt-0.5">강의 블록을 클릭하면 전체 정보를 볼 수 있습니다.</p>
+                  <p className="text-xs font-medium text-slate-500 mt-0.5">{shortLabel} 캠퍼스 기준 시간표입니다.</p>
                 </div>
               </div>
               <div className="hidden sm:flex items-center text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
@@ -207,7 +217,7 @@ export default function Timetable() {
           </div>
         )}
 
-        {searchPlace && schedule.length === 0 && (
+        {normalizedSearchPlace && schedule.length === 0 && (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-100 border-dashed">
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <CalendarIcon size={32} className="text-slate-400" />

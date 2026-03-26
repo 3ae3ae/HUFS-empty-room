@@ -1,10 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByBuilding } from '../lib/data';
 import { ChevronDown, Clock, MapPin, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
-import campusMap from '../assets/campus_map.jpg';
 import ImageLightbox from '../components/ImageLightbox';
+import { useCampus } from '../lib/campus';
 
 const hourOptions = Array.from({ length: 12 }, (_, index) => index + 9);
 const DAY_START_MIN = hourOptions[0] * 60;
@@ -15,9 +14,11 @@ const formatHourLabel = (hour: string) => `${hour}시`;
 
 export default function Home() {
   const navigate = useNavigate();
+  const { campusData, campusMap } = useCampus();
+  const { buildings, formatPlaceLabel, getBuildingName, scheduleByPlace, roomsByBuilding, shortLabel } = campusData;
   const initialNow = new Date();
   const [timeMode, setTimeMode] = useState<'now' | 'custom'>('now');
-  const [selectedBuildings, setSelectedBuildings] = useState<string[]>([...buildings]);
+  const [selectedBuildings, setSelectedBuildings] = useState<string[]>(() => [...buildings]);
 
   const [customDay, setCustomDay] = useState<number>(initialNow.getDay() === 0 ? 6 : initialNow.getDay() - 1);
   const [customStartTime, setCustomStartTime] = useState<string>(formatHourValue(initialNow.getHours()));
@@ -33,6 +34,12 @@ export default function Home() {
       return () => clearInterval(timer);
     }
   }, [timeMode]);
+
+  useEffect(() => {
+    setSelectedBuildings([...buildings]);
+    setExpandedBuildings({});
+    setIsMapOpen(false);
+  }, [buildings]);
 
   const targetDay = timeMode === 'now' ? (currentTime.getDay() === 0 ? 6 : currentTime.getDay() - 1) : customDay;
   const startMin = timeMode === 'now'
@@ -220,7 +227,7 @@ export default function Home() {
           <div className="space-y-3">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-2">
               <Sparkles size={16} className="mr-1.5 text-amber-200" />
-              HUFS 빈 강의실 찾기
+              {shortLabel} 캠퍼스 빈 강의실 찾기
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
               {getGreeting()}
@@ -241,12 +248,12 @@ export default function Home() {
               <div className="rounded-[1.2rem] bg-gradient-to-br from-slate-100 via-white to-cyan-50 p-2 shadow-inner">
                 <img
                   src={campusMap}
-                  alt="캠퍼스 강의실 지도"
+                  alt={`${shortLabel} 캠퍼스 강의실 지도`}
                   className="w-full rounded-2xl border border-slate-200/80 bg-white object-cover shadow-[0_12px_30px_rgba(15,23,42,0.12)]"
                 />
               </div>
               <div className="mt-3 flex items-center justify-between gap-3 px-1">
-                <p className="text-sm font-semibold text-white/95">강의실 위치를 한눈에 확인하세요</p>
+                <p className="text-sm font-semibold text-white/95">{shortLabel} 캠퍼스 강의실 위치를 한눈에 확인하세요</p>
                 <span className="rounded-full bg-white/20 px-2.5 py-1 text-[11px] font-semibold text-white/90 border border-white/20">
                   클릭해서 확대
                 </span>
@@ -429,7 +436,7 @@ export default function Home() {
                       <button
                         key={room.place}
                         type="button"
-                        onClick={() => navigate(`/timetable/${room.place}${createTimetableSearch()}`)}
+                        onClick={() => navigate(`/timetable/${encodeURIComponent(room.place)}${createTimetableSearch()}`)}
                         className="group flex w-full items-center justify-between gap-3 border-t border-gray-100 px-4 py-4 text-left transition-colors hover:bg-blue-50/60"
                       >
                         <div className="min-w-0">
@@ -487,8 +494,8 @@ export default function Home() {
       <ImageLightbox
         isOpen={isMapOpen}
         src={campusMap}
-        alt="캠퍼스 강의실 지도"
-        title="캠퍼스 지도"
+        alt={`${shortLabel} 캠퍼스 강의실 지도`}
+        title={`${shortLabel} 캠퍼스 지도`}
         onClose={() => setIsMapOpen(false)}
       />
     </div>

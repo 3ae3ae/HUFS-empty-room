@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { X, BookOpen, CalendarDays, MapPin, User, Hash } from 'lucide-react';
 import type { ParsedSubject, ParsedTimePlace } from '../lib/data';
-import { formatPlaceLabel } from '../lib/data';
+import { useCampus } from '../lib/campus';
 
 const DAY_LABELS = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
 
@@ -28,6 +28,9 @@ export default function LectureDetailModal({
   currentBadgeLabel = '현재 진행 중',
   onClose,
 }: LectureDetailModalProps) {
+  const { campusData } = useCampus();
+  const { formatPlaceLabel } = campusData;
+
   useEffect(() => {
     if (!isOpen) return;
 

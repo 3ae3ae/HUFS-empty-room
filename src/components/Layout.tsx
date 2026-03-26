@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Calendar, User, Sparkles, MessageSquareHeart } from 'lucide-react';
+import { Menu, X, Home, Calendar, Sparkles, MessageSquareHeart } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useCampus } from '../lib/campus';
+import { campusOptions } from '../lib/data';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { campus, setCampus } = useCampus();
 
   const navItems = [
     { path: '/', label: '빈 강의실 찾기', icon: Home },
@@ -23,9 +26,33 @@ export default function Layout() {
             </div>
             HUFS 강의실 찾기
           </Link>
-          <button onClick={() => setIsOpen(true)} className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex rounded-full bg-slate-100 p-1 shadow-inner">
+              {campusOptions.map(option => {
+                const isActive = option.key === campus;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => setCampus(option.key)}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold transition-all sm:px-4',
+                      isActive
+                        ? 'bg-white text-blue-700 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-800'
+                    )}
+                    aria-pressed={isActive}
+                  >
+                    {option.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setIsOpen(true)} className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+              <Menu size={24} />
+            </button>
+          </div>
         </div>
       </header>
 
