@@ -3,12 +3,12 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu, X, Home, Calendar, Sparkles, MessageSquareHeart } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useCampus } from '../lib/campus';
-import { campusOptions } from '../lib/data';
 
 export default function Layout() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { campus, setCampus } = useCampus();
+  const nextCampus = campus === 'seoul' ? 'global' : 'seoul';
 
   const navItems = [
     { path: '/', label: '빈 강의실 찾기', icon: Home },
@@ -27,28 +27,27 @@ export default function Layout() {
             HUFS 강의실 찾기
           </Link>
           <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-full bg-slate-100 p-1 shadow-inner">
-              {campusOptions.map(option => {
-                const isActive = option.key === campus;
-
-                return (
-                  <button
-                    key={option.key}
-                    type="button"
-                    onClick={() => setCampus(option.key)}
-                    className={cn(
-                      'rounded-full px-3 py-1.5 text-xs font-bold transition-all sm:px-4',
-                      isActive
-                        ? 'bg-white text-blue-700 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-800'
-                    )}
-                    aria-pressed={isActive}
-                  >
-                    {option.shortLabel}
-                  </button>
-                );
-              })}
-            </div>
+            <button
+              type="button"
+              onClick={() => setCampus(nextCampus)}
+              className="relative inline-grid h-10 w-[126px] grid-cols-2 items-center rounded-full bg-slate-100 p-1 text-xs font-bold text-slate-500 shadow-inner transition-colors hover:bg-slate-200/70"
+              aria-label={`현재 ${campus === 'seoul' ? '서울' : '글로벌'} 캠퍼스 선택됨, 클릭해서 ${nextCampus === 'seoul' ? '서울' : '글로벌'} 캠퍼스로 전환`}
+              aria-pressed={campus === 'global'}
+            >
+              <span
+                className={cn(
+                  'absolute inset-y-1 w-[calc(50%-4px)] rounded-full bg-white shadow-sm transition-[left]',
+                  campus === 'seoul' ? 'left-1' : 'left-[calc(50%)]'
+                )}
+                aria-hidden="true"
+              />
+              <span className={cn('relative z-10 px-2', campus === 'seoul' ? 'text-blue-700' : 'text-slate-500')}>
+                서울
+              </span>
+              <span className={cn('relative z-10 px-2', campus === 'global' ? 'text-blue-700' : 'text-slate-500')}>
+                글로벌
+              </span>
+            </button>
             <button onClick={() => setIsOpen(true)} className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
               <Menu size={24} />
             </button>
