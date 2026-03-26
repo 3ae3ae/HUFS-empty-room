@@ -220,7 +220,7 @@ export default function Home() {
           <div className="space-y-3">
             <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-medium mb-2">
               <Sparkles size={16} className="mr-1.5 text-amber-200" />
-              HUFS 빈 강의실 찾기 (글로벌)
+              HUFS 빈 강의실 찾기
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
               {getGreeting()}

@@ -21,7 +21,7 @@ export default function Layout() {
             <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-sm shadow-blue-200">
               <Sparkles size={18} />
             </div>
-            HUFS (글로벌) 강의실 찾기
+            HUFS 강의실 찾기
           </Link>
           <button onClick={() => setIsOpen(true)} className="p-2 -mr-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
             <Menu size={24} />
